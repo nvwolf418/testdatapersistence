@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MainMenuManager : MonoBehaviour
 {
@@ -11,7 +12,7 @@ public class MainMenuManager : MonoBehaviour
     public static string nameText;
     // Start is called before the first frame update
 
-    public TextMeshProUGUI nameInputText;
+    public TMP_InputField nameInputText;
     public TextMeshProUGUI namePlaceholder;
     public TextMeshProUGUI warningText;
 
@@ -32,25 +33,38 @@ public class MainMenuManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(Input.anyKeyDown && warningText.IsActive() && nameInputText.text.Length > 3)
+        if(Input.anyKeyDown)
+        {
+            CheckNameLength();
+        }
+    }
+
+    public void CheckNameLength()
+    {
+        //checking for input length for name [3,7]
+        if (nameInputText.text.Length > 7)
+        {
+            warningText.text = "Please Input A Name Less Than 7 Characters!!!";
+            warningText.gameObject.SetActive(true);
+        }
+        else if(nameInputText.text.Length < 3)
+        {
+            warningText.text = "Please Input A Name Greater Than 2 Characters!!!";
+            warningText.gameObject.SetActive(true);
+        }
+        else
         {
             warningText.gameObject.SetActive(false);
         }
     }
 
-    public void GetStartMenuName()
+    public void SubmitName()
     {
-        Debug.Log($"Name : {nameInputText.text} : length {nameInputText.text.Length}");
-
-        if (nameInputText.text.Length > 3)
+        //checks to make sure name meets requirements [3,7]
+        if (!warningText.IsActive())
         {
             nameText = "Name: " + nameInputText.text;
             SceneManager.LoadScene(1);
         }
-        else
-        {
-            warningText.gameObject.SetActive(true);
-        }
-
     }
 }

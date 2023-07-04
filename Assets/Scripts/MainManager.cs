@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -13,11 +15,15 @@ public class MainManager : MonoBehaviour
 
     public TextMeshProUGUI ScoreText;
     public TextMeshProUGUI NameText;
+    public TextMeshProUGUI HighScoreText;
 
     public GameObject GameOverText;
     
     private bool m_Started = false;
-    private int m_Points;
+    private string m_CurrentName;
+    private int m_CurrentPoints;
+    private int m_HighScorePoints;
+    private string m_HighScoreName = null;
     
     private bool m_GameOver = false;
 
@@ -40,6 +46,9 @@ public class MainManager : MonoBehaviour
             }
         }
         NameText.text = MainMenuManager.nameText;
+        m_CurrentName = MainMenuManager.nameText.Split(':')[1].Trim();
+        GetHighScoreF();
+        DisplayHighScore();
     }
 
     private void Update()
@@ -49,7 +58,7 @@ public class MainManager : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 m_Started = true;
-                float randomDirection = Random.Range(-1.0f, 1.0f);
+                float randomDirection = UnityEngine.Random.Range(-1.0f, 1.0f);
                 Vector3 forceDir = new Vector3(randomDirection, 1, 0);
                 forceDir.Normalize();
 
@@ -68,15 +77,73 @@ public class MainManager : MonoBehaviour
 
     void AddPoint(int point)
     {
-        m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
+        m_CurrentPoints += point;
+        ScoreText.text = $"Score : {m_CurrentPoints}";
+        DisplayHighScore();
     }
 
     public void GameOver()
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+        CreateHighScoreF();
     }
 
- 
+
+
+
+    [System.Serializable]
+    public class HighScore
+    {
+        public int score;
+        public string name;
+    }
+
+    private void CreateHighScoreF()
+    {
+        Debug.Log($"file loc: {Application.persistentDataPath}savefilehighscore.json");
+        if (m_CurrentPoints >= m_HighScorePoints)
+        {
+           
+            HighScore highScore = new HighScore();
+            highScore.score = m_CurrentPoints;
+            highScore.name = m_CurrentName;
+
+            string json = JsonUtility.ToJson(highScore);
+            File.WriteAllText(Application.persistentDataPath + "savefilehighscore.json", json);
+        }
+    }
+
+    private void GetHighScoreF()
+    {
+
+       
+        string path = Application.persistentDataPath + "savefilehighscore.json";
+        Debug.Log($"file path exists???: {File.Exists(path)} --- {Application.persistentDataPath}savefilehighscore.json");
+        if (File.Exists(path)) 
+        {
+            string json = File.ReadAllText(path);
+            HighScore highScore = JsonUtility.FromJson<HighScore>(json);
+
+            m_HighScorePoints = highScore.score;
+            m_HighScoreName = highScore.name;
+        }
+        else
+        {
+            m_HighScorePoints = 0;
+        }
+    }
+
+    private void DisplayHighScore()
+    {
+        //sets high score display to current player if prev high score doesn't exist or it has been beaten
+        if(m_HighScoreName == null || m_CurrentPoints > m_HighScorePoints)
+        {
+            HighScoreText.text = $"Name: {m_CurrentName} High Score: {m_CurrentPoints}";
+        }
+        else
+        {
+            HighScoreText.text = $"Name: {m_HighScoreName} High Score: {m_HighScorePoints}";
+        }
+    }
 }
